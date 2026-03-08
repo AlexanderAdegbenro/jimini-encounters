@@ -1,5 +1,7 @@
 # Patient Encounter List – Jimini Health
 
+<img width="1920" height="1440" alt="506shots_so" src="https://github.com/user-attachments/assets/f2e8c37a-4c0b-413f-b28c-cb1857d81345" />
+
 A React Native (Expo) app that displays a paginated list of patient encounters and their details, with PHI-aware logging and error handling.
 
 ---
