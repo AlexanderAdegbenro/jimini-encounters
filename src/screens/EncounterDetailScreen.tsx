@@ -1,18 +1,29 @@
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/types';
 import { api } from '../api/client';
 import { LoadingState } from '../components/LoadingState';
 import { ErrorState } from '../components/ErrorState';
+import { formatEncounterDateTime } from '../utils/date';
 import { encounterDetailStyles as styles } from './EncounterDetailScreen.styles';
 
 type DetailRoute = RouteProp<RootStackParamList, 'EncounterDetail'>;
 
 export function EncounterDetailScreen() {
-  const { params } = useRoute<DetailRoute>();
-  const { id } = params;
+  const route = useRoute<DetailRoute>();
+  const navigation = useNavigation();
+  const { id } = route.params ?? {};
+
+  if (!id) {
+    return (
+      <ErrorState
+        message="Invalid Encounter ID"
+        onRetry={() => navigation.goBack()}
+      />
+    );
+  }
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['encounter', id],
@@ -44,7 +55,7 @@ export function EncounterDetailScreen() {
       </View>
       <View style={styles.section}>
         <Text style={styles.label}>Date</Text>
-        <Text style={styles.value}>{data.encounterDate.slice(0, 10)}</Text>
+        <Text style={styles.value}>{formatEncounterDateTime(data.encounterDate)}</Text>
       </View>
       <View style={styles.section}>
         <Text style={styles.label}>Type</Text>

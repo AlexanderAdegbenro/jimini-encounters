@@ -1,4 +1,6 @@
 import { StyleSheet } from 'react-native';
+import { colors } from '../theme/colors';
+import { typography } from '../theme/typography';
 
 export const emptyStateStyles = StyleSheet.create({
   container: {
@@ -7,9 +9,10 @@ export const emptyStateStyles = StyleSheet.create({
     alignItems: 'center',
     minHeight: 200,
     padding: 24,
+    backgroundColor: colors.background,
   },
   text: {
-    fontSize: 16,
-    color: '#666',
+    ...typography.body,
+    color: colors.textSecondary,
   },
 });

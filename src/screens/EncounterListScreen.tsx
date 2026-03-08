@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,13 +16,43 @@ import { api } from '../api/client';
 import { LoadingState } from '../components/LoadingState';
 import { ErrorState } from '../components/ErrorState';
 import { EmptyState } from '../components/EmptyState';
+import { formatEncounterDate } from '../utils/date';
 import { encounterListStyles as styles } from './EncounterListScreen.styles';
 
 const PAGE_SIZE = 20;
-const ESTIMATED_ITEM_HEIGHT = 88;
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'EncounterList'>;
 
+/**
+ * Optimized Status Badge using React.memo to prevent unnecessary re-renders.
+ */
+const StatusBadge = React.memo(({ status }: { status: string }) => {
+  const isCompleted = status === 'completed';
+  const isScheduled = status === 'scheduled';
+
+  const badgeStyle = isCompleted
+    ? styles.statusBadgeCompleted
+    : isScheduled
+      ? styles.statusBadgeScheduled
+      : styles.statusBadgeDefault;
+
+  const textStyle = isCompleted
+    ? styles.statusBadgeTextCompleted
+    : isScheduled
+      ? styles.statusBadgeTextScheduled
+      : styles.statusBadgeTextDefault;
+
+  return (
+    <View style={[styles.statusBadge, badgeStyle]}>
+      <Text style={textStyle}>{status}</Text>
+    </View>
+  );
+});
+StatusBadge.displayName = 'StatusBadge';
+
+/**
+ * Encounter Row component defined outside to maintain a stable reference.
+ */
 function EncounterRow({
   item,
   onPress,
@@ -31,18 +61,26 @@ function EncounterRow({
   onPress: () => void;
 }) {
   return (
-    <Pressable style={styles.row} onPress={onPress} android_ripple={{ color: '#eee' }}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`View encounter for patient ${item.patientInitials}`}
+      style={styles.row}
+      onPress={onPress}
+      android_ripple={{ color: '#eee' }}
+    >
       <View style={styles.rowContent}>
         <Text style={styles.initials}>{item.patientInitials}</Text>
         <View style={styles.meta}>
           <Text style={styles.type}>{item.encounterType}</Text>
-          <Text style={styles.date}>{item.encounterDate.slice(0, 10)}</Text>
+          <Text style={styles.date}>{formatEncounterDate(item.encounterDate)}</Text>
         </View>
-        <Text style={styles.status}>{item.status}</Text>
+        <StatusBadge status={item.status} />
       </View>
     </Pressable>
   );
 }
+
+const MemoizedEncounterRow = React.memo(EncounterRow);
 
 export function EncounterListScreen() {
   const navigation = useNavigation<Nav>();
@@ -67,15 +105,30 @@ export function EncounterListScreen() {
 
   const encounters = data?.pages.flatMap((p) => p.encounters) ?? [];
 
-  const onRefresh = () => refetch();
+  // Memoizing handlers to prevent unnecessary FlashList re-renders
+  const onRefresh = useCallback(() => refetch(), [refetch]);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-  };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  if (isLoading) {
-    return <LoadingState />;
-  }
+  const handlePress = useCallback(
+    (id: string) => {
+      navigation.navigate('EncounterDetail', { id });
+    },
+    [navigation]
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: Encounter }) => (
+      <MemoizedEncounterRow item={item} onPress={() => handlePress(item.id)} />
+    ),
+    [handlePress]
+  );
+
+  const keyExtractor = useCallback((item: Encounter) => item.id, []);
+
+  if (isLoading) return <LoadingState />;
 
   if (isError) {
     return (
@@ -86,24 +139,19 @@ export function EncounterListScreen() {
     );
   }
 
-  if (encounters.length === 0) {
-    return <EmptyState />;
-  }
+  if (encounters.length === 0) return <EmptyState />;
 
   return (
     <View style={styles.container}>
-      <FlashList<Encounter>
+      {/* Note: We let TypeScript infer the generic type from 'data' 
+        to avoid the common FlashList generic JSX error.
+      */}
+      <FlashList
         data={encounters}
-        renderItem={({ item }) => (
-          <EncounterRow
-            item={item}
-            onPress={() => navigation.navigate('EncounterDetail', { id: item.id })}
-          />
-        )}
-        keyExtractor={(item) => item.id}
-        estimatedItemSize={ESTIMATED_ITEM_HEIGHT}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
         onEndReached={loadMore}
-        onEndReachedThreshold={0.3}
+        onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />
         }

@@ -1,8 +1,11 @@
 import { StyleSheet } from 'react-native';
+import { colors } from '../theme/colors';
+import { typography } from '../theme/typography';
 
 export const encounterDetailStyles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   content: {
     padding: 16,
@@ -12,12 +15,14 @@ export const encounterDetailStyles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 12,
-    color: '#666',
+    ...typography.caption,
+    color: colors.textSecondary,
     marginBottom: 4,
     textTransform: 'uppercase',
   },
   value: {
-    fontSize: 16,
+    ...typography.body,
+    fontWeight: '600',
+    color: colors.textPrimary,
   },
 });
