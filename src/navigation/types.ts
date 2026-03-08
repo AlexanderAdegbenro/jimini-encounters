@@ -1,6 +1,6 @@
 export type RootStackParamList = {
   EncounterList: undefined;
-  EncounterDetail: { id: string };
+  EncounterDetail: { id: string; patientInitials?: string };
 };
 
 declare global {

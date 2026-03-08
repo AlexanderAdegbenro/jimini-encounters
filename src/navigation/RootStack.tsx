@@ -26,7 +26,11 @@ export function RootStack() {
       <Stack.Screen
         name="EncounterDetail"
         component={EncounterDetailScreen}
-        options={{ title: 'Encounter' }}
+        options={({ route }) => ({
+          title: route.params?.patientInitials
+            ? `Encounter: ${route.params.patientInitials}`
+            : 'Session Details',
+        })}
       />
     </Stack.Navigator>
   );

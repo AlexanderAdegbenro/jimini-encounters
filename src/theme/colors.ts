@@ -13,4 +13,6 @@ export const colors = {
   statusScheduled: '#DBEAFE',
   statusScheduledText: '#1E40AF',
   white: '#FFFFFF',
+  /** Soft sky blue for notes / clinical content containers */
+  notesBackground: '#F2F4F7',
 } as const;

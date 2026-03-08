@@ -11,6 +11,10 @@ export const emptyStateStyles = StyleSheet.create({
     padding: 24,
     backgroundColor: colors.background,
   },
+  icon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
   text: {
     ...typography.body,
     color: colors.textSecondary,

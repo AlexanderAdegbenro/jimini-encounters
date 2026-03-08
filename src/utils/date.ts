@@ -55,6 +55,26 @@ export function formatEncounterDate(value: string | number | Date): string {
 }
 
 /**
+ * Returns date and time parts for list row hierarchy (e.g. "Today" bold, "10:47 AM" lighter).
+ */
+export function formatEncounterDateParts(
+  value: string | number | Date
+): { datePart: string; timePart: string } {
+  const d = parseEncounterDate(value);
+  if (!d) return { datePart: FALLBACK, timePart: '' };
+  if (isToday(d)) {
+    return {
+      datePart: 'Today',
+      timePart: d.toLocaleTimeString(undefined, timeOptions),
+    };
+  }
+  return {
+    datePart: d.toLocaleDateString(undefined, dateOptions),
+    timePart: d.toLocaleTimeString(undefined, timeOptions),
+  };
+}
+
+/**
  * Formats encounter date for detail view (full date and time).
  */
 export function formatEncounterDateTime(value: string | number | Date): string {

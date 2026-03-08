@@ -10,4 +10,8 @@ module.exports = {
   ],
   modulePathIgnorePatterns: ['.expo/'],
   testPathIgnorePatterns: ['/node_modules/'],
+  fakeTimers: { enableGlobally: true },
+  moduleNameMapper: {
+    '^expo/src/winter$': '<rootDir>/__mocks__/expo-winter.js',
+  },
 };

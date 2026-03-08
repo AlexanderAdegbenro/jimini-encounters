@@ -16,7 +16,8 @@ import { api } from '../api/client';
 import { LoadingState } from '../components/LoadingState';
 import { ErrorState } from '../components/ErrorState';
 import { EmptyState } from '../components/EmptyState';
-import { formatEncounterDate } from '../utils/date';
+import { formatEncounterDateParts } from '../utils/date';
+import { formatLabel } from '../utils/string';
 import { encounterListStyles as styles } from './EncounterListScreen.styles';
 
 const PAGE_SIZE = 20;
@@ -44,7 +45,7 @@ const StatusBadge = React.memo(({ status }: { status: string }) => {
 
   return (
     <View style={[styles.statusBadge, badgeStyle]}>
-      <Text style={textStyle}>{status}</Text>
+      <Text style={textStyle}>{formatLabel(status)}</Text>
     </View>
   );
 });
@@ -52,27 +53,41 @@ StatusBadge.displayName = 'StatusBadge';
 
 /**
  * Encounter Row component defined outside to maintain a stable reference.
+ * Accepts onPress(id, patientInitials?) so the parent can pass a stable callback and avoid list jitter.
  */
 function EncounterRow({
   item,
   onPress,
 }: {
   item: Encounter;
-  onPress: () => void;
+  onPress: (id: string, patientInitials?: string) => void;
 }) {
+  const handlePress = useCallback(
+    () => onPress(item.id, item.patientInitials),
+    [item.id, item.patientInitials, onPress]
+  );
+  const { datePart, timePart } = formatEncounterDateParts(item.encounterDate);
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`View encounter for patient ${item.patientInitials}`}
-      style={styles.row}
-      onPress={onPress}
+      style={({ pressed }) => [
+        styles.row,
+        pressed && { transform: [{ scale: 0.98 }] },
+      ]}
+      onPress={handlePress}
       android_ripple={{ color: '#eee' }}
     >
       <View style={styles.rowContent}>
         <Text style={styles.initials}>{item.patientInitials}</Text>
         <View style={styles.meta}>
-          <Text style={styles.type}>{item.encounterType}</Text>
-          <Text style={styles.date}>{formatEncounterDate(item.encounterDate)}</Text>
+          <Text style={styles.type}>{formatLabel(item.encounterType)}</Text>
+          <View style={styles.dateRow}>
+            <Text style={styles.datePartBold}>{datePart}</Text>
+            {timePart ? (
+              <Text style={styles.datePartTime}>{timePart}</Text>
+            ) : null}
+          </View>
         </View>
         <StatusBadge status={item.status} />
       </View>
@@ -113,15 +128,15 @@ export function EncounterListScreen() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handlePress = useCallback(
-    (id: string) => {
-      navigation.navigate('EncounterDetail', { id });
+    (id: string, patientInitials?: string) => {
+      navigation.navigate('EncounterDetail', { id, patientInitials });
     },
     [navigation]
   );
 
   const renderItem = useCallback(
     ({ item }: { item: Encounter }) => (
-      <MemoizedEncounterRow item={item} onPress={() => handlePress(item.id)} />
+      <MemoizedEncounterRow item={item} onPress={handlePress} />
     ),
     [handlePress]
   );
@@ -150,6 +165,7 @@ export function EncounterListScreen() {
         data={encounters}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
+        contentContainerStyle={styles.listContent}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         refreshControl={
