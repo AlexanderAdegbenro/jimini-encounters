@@ -3,9 +3,13 @@
 # dependencies
 node_modules/
 
-# Expo
+# Expo / build
 .expo/
 dist/
+
+# debug logs
+npm-debug.log*
+yarn-error.log*
 web-build/
 expo-env.d.ts
 
