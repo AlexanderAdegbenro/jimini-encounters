@@ -54,14 +54,22 @@ Jest is configured with `jest-expo`, and a small mock for `expo/src/winter` is u
 
 ## Time Breakdown
 
-| Phase | Time |
-|-------|------|
-| Setup (Expo, deps, navigation) | _e.g. 1–2h_ |
-| API abstraction + types | _e.g. 0.5h_ |
-| List screen (infinite list, loading/error/empty) | _e.g. 1–2h_ |
-| Detail screen | _e.g. 0.5–1h_ |
-| Date utils + PHI logger | _e.g. 0.5h_ |
-| Error boundary + polish (memo, stable callbacks) | _e.g. 0.5h_ |
-| Tests + README + final checks | _e.g. 1h_ |
+| Phase | Estimated Time | Git Timestamp Reference |
+|-------|----------------|-------------------------|
+| Setup & Architecture | 1h | Mar 7, 18:31 – 19:18 |
+| API, State & Core UI | 1.5h | Mar 8, 14:06 – 14:30 |
+| Stability & Optimizations | 1h | Mar 8, 14:30 – 14:58 |
+| Brand Polish & Testing | 0.5h | Mar 8, 14:58 – 15:20 |
+| **Total Work Time** | **~4 Hours** | — |
 
-_Adjust the estimates above to match your actual time spent._
+**Note:** Time breakdown is approximate. Work was split across two sessions to prioritize architectural planning on Day 1 and high-leverage UI/UX implementation on Day 2.
+
+---
+
+## Trade-offs & Future Improvements
+
+- **Data Persistence:** Currently, the app relies on in-memory caching via React Query. For a production healthcare app, I would implement persistent storage (e.g., react-native-mmkv with a React Query persister) to allow clinicians to access data offline in low-connectivity hospital areas.
+
+- **Security & Error Tracking:** While I've implemented a PHI-aware logger, a production app would integrate Sentry. I would utilize a `beforeSend` hook to run our redaction logic on all breadcrumbs and error reports before they leave the device.
+
+- **API Validation:** To harden the boundary between the API and the UI, I would implement Zod or io-ts to validate response shapes at runtime. This ensures that if a backend schema changes, the app fails gracefully with a clear error rather than an undefined crash.
